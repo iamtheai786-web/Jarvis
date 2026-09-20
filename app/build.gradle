@@ -1,0 +1,26 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.jarvis.ai'
+    compileSdk 33
+
+    defaultConfig {
+        applicationId "com.jarvis.ai"
+        minSdk 24
+        targetSdk 33
+        versionCode 1
+        versionName "1.0-PROTOTYPE"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}
