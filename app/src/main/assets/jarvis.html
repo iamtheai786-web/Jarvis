@@ -102,7 +102,7 @@
     </div>
 
     <div class="display-box" id="chatDisplay">
-        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome back, Boss. Active Gemini Engine Ready. How can I assist you?</div>
+        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome back, Boss. Gemini Engine Active. How can I assist you?</div>
     </div>
 
     <div class="controls">
@@ -152,8 +152,8 @@
 
             statusText.innerText = "THINKING...";
 
-            // Strictly active models array (no deprecated models included)
-            const models = ['gemini-2.5-flash', 'gemini-3.6-flash', 'gemini-2.5-pro'];
+            // Active valid models recommended by Google
+            const models = ['gemini-3.6-flash', 'gemini-3.1-pro-preview'];
             let lastError = "";
 
             for (let model of models) {
