@@ -15,7 +15,7 @@ android {
     }
 
     signingConfigs {
-        debug {
+        customDebug {
             storeFile file('debug.keystore')
             storePassword 'android'
             keyAlias 'androiddebugkey'
@@ -25,10 +25,10 @@ android {
 
     buildTypes {
         debug {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.customDebug
         }
         release {
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.customDebug
         }
     }
 
