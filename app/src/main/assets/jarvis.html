@@ -102,7 +102,7 @@
     </div>
 
     <div class="display-box" id="chatDisplay">
-        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome back, Boss. Gemini 2.5 Engine Active. How can I assist you?</div>
+        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome back, Boss. Gemini 3.6 Flash Engine Active. How can I assist you?</div>
     </div>
 
     <div class="controls">
@@ -152,38 +152,40 @@
 
             statusText.innerText = "THINKING...";
 
-            // Official Google Gemini 2.5 Flash Endpoint
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            // Google Gemini 3.6 Flash endpoint
+            const models = ['gemini-3.6-flash', 'gemini-1.5-flash'];
+            let lastError = "";
 
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{ text: "You are JARVIS, an intelligent AI assistant. Answer Boss directly and concisely. Question: " + promptText }]
-                        }]
-                    })
-                });
+            for (let model of models) {
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{ text: "You are JARVIS, an intelligent AI assistant. Answer Boss directly and concisely. Question: " + promptText }]
+                            }]
+                        })
+                    });
 
-                const data = await response.json();
+                    const data = await response.json();
 
-                if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
-                    statusText.innerText = "SYSTEM ONLINE // READY";
-                    return data.candidates[0].content.parts[0].text;
+                    if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+                        statusText.innerText = "SYSTEM ONLINE // READY";
+                        return data.candidates[0].content.parts[0].text;
+                    }
+
+                    if (data.error && data.error.message) {
+                        lastError = data.error.message;
+                    }
+                } catch (err) {
+                    lastError = "Network connection failed.";
                 }
-
-                if (data.error && data.error.message) {
-                    statusText.innerText = "SYSTEM ONLINE // READY";
-                    return "API Error: " + data.error.message;
-                }
-            } catch (err) {
-                statusText.innerText = "SYSTEM ONLINE // READY";
-                return "Network connection error.";
             }
 
             statusText.innerText = "SYSTEM ONLINE // READY";
-            return "Unable to get response from Gemini API.";
+            return "API Error: " + (lastError || "Check your API key or internet connection.");
         }
 
         async function processCommand(text) {
