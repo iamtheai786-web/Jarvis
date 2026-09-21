@@ -102,7 +102,7 @@
     </div>
 
     <div class="display-box" id="chatDisplay">
-        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome back, Boss. Gemini 3.6 Flash Engine Active. How can I assist you?</div>
+        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome back, Boss. Active Gemini Engine Ready. How can I assist you?</div>
     </div>
 
     <div class="controls">
@@ -152,8 +152,8 @@
 
             statusText.innerText = "THINKING...";
 
-            // Google Gemini 3.6 Flash endpoint
-            const models = ['gemini-3.6-flash', 'gemini-1.5-flash'];
+            // Strictly active models array (no deprecated models included)
+            const models = ['gemini-2.5-flash', 'gemini-3.6-flash', 'gemini-2.5-pro'];
             let lastError = "";
 
             for (let model of models) {
@@ -180,12 +180,12 @@
                         lastError = data.error.message;
                     }
                 } catch (err) {
-                    lastError = "Network connection failed.";
+                    lastError = "Network connection failed. Please check internet.";
                 }
             }
 
             statusText.innerText = "SYSTEM ONLINE // READY";
-            return "API Error: " + (lastError || "Check your API key or internet connection.");
+            return "API Error: " + (lastError || "Service temporarily unavailable.");
         }
 
         async function processCommand(text) {
