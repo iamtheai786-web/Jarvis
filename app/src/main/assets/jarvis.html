@@ -102,7 +102,7 @@
     </div>
 
     <div class="display-box" id="chatDisplay">
-        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome back, Boss. Multi-Model Gemini Engine Active. How can I assist you?</div>
+        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome back, Boss. Gemini Engine Updated. How can I assist you?</div>
     </div>
 
     <div class="controls">
@@ -152,8 +152,8 @@
 
             statusText.innerText = "THINKING...";
 
-            // Auto-try standard Gemini models in fallback order
-            const models = ['gemini-1.5-flash-latest', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+            // Active Google Gemini models array
+            const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash-latest'];
             let lastError = "";
 
             for (let model of models) {
@@ -163,7 +163,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             contents: [{
-                                parts: [{ text: "You are JARVIS, an intelligent AI assistant. Respond directly and concisely to Boss. Question: " + promptText }]
+                                parts: [{ text: "You are JARVIS, an intelligent AI assistant. Answer Boss directly and concisely. Question: " + promptText }]
                             }]
                         })
                     });
@@ -184,13 +184,13 @@
             }
 
             statusText.innerText = "SYSTEM ONLINE // READY";
-            return "API Error: " + (lastError || "Check your API key or internet.");
+            return "API Error: " + (lastError || "Check your API key or internet connection.");
         }
 
         async function processCommand(text) {
             const query = text.toLowerCase();
 
-            // Hardware Commands (Local Execution)
+            // Hardware Controls
             if (query.includes('torch') || query.includes('flashlight') || query.includes('light')) {
                 if (query.includes('on') || query.includes('open') || query.includes('start')) {
                     let ok = window.Android && window.Android.setTorch ? window.Android.setTorch(true) : false;
