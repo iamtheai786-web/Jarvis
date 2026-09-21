@@ -42,7 +42,6 @@
             transition: all 0.3s ease;
         }
         
-        /* Green glow style for update ready state */
         .btn-update-active {
             background: #00ff66 !important;
             color: #050b14 !important;
@@ -57,7 +56,6 @@
             100% { transform: scale(1); box-shadow: 0 0 10px #00ff66; }
         }
 
-        /* Compact Orb Layout to save screen space */
         .orb-wrapper {
             display: flex;
             justify-content: center;
@@ -85,9 +83,8 @@
         @keyframes spin-reverse { 100% { transform: rotate(-360deg); } }
         @keyframes pulse { 0%, 100% { transform: scale(0.9); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } }
 
-        /* FULL SCREEN EXPANDED CHAT DISPLAY */
         .display-box {
-            flex: 1; /* Takes up all available screen height */
+            flex: 1;
             width: 100%;
             background: rgba(10, 25, 47, 0.85);
             border: 1px solid rgba(0, 243, 255, 0.3);
@@ -134,7 +131,7 @@
     </div>
 
     <div class="display-box" id="chatDisplay">
-        <div class="message jarvis-msg"><b>JARVIS:</b> System initialized, Boss. Full screen interface & Auto-update system active. How can I help you today?</div>
+        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome Boss! Tap '🔑 KEY' to enter your API key, then ask me anything.</div>
     </div>
 
     <div class="controls">
@@ -143,7 +140,7 @@
     </div>
 
     <script>
-        const CURRENT_VERSION = 1;
+        const CURRENT_VERSION = 2;
         const RAW_VERSION_URL = "/main/version.json";
         let updateDownloadUrl = "";
 
@@ -151,7 +148,6 @@
         const statusText = document.getElementById('statusText');
         const updateBtn = document.getElementById('updateBtn');
 
-        // Check for App Updates from GitHub
         async function checkAppUpdate() {
             try {
                 const res = await fetch(RAW_VERSION_URL + '?t=' + new Date().getTime());
@@ -176,31 +172,15 @@
                     window.open(updateDownloadUrl, '_blank');
                 }
             } else {
-                alert("Your Jarvis App is already on the latest version (v" + CURRENT_VERSION + ").");
+                alert("Your Jarvis App is up to date (v" + CURRENT_VERSION + ").");
             }
-        }
-
-        // Get and Save API Key permanently
-        function getSavedApiKey() {
-            let key = "";
-            if (window.Android && window.Android.getApiKey) {
-                key = window.Android.getApiKey();
-            }
-            if (!key) {
-                key = localStorage.getItem('gemini_api_key') || '';
-            }
-            return key;
         }
 
         function setApiKey() {
-            const currentKey = getSavedApiKey();
+            const currentKey = localStorage.getItem('gemini_api_key') || '';
             const key = prompt("Enter your Gemini API Key:", currentKey);
-            if (key !== null) {
-                const cleanKey = key.trim();
-                localStorage.setItem('gemini_api_key', cleanKey);
-                if (window.Android && window.Android.saveApiKey) {
-                    window.Android.saveApiKey(cleanKey);
-                }
+            if (key !== null && key.trim() !== "") {
+                localStorage.setItem('gemini_api_key', key.trim());
                 alert("API Key permanently saved!");
             }
         }
@@ -226,13 +206,83 @@
             if (!isUser) speak(text);
         }
 
-        function sendText() {
+        async function fetchGeminiResponse(promptText) {
+            const apiKey = localStorage.getItem('gemini_api_key') || '';
+            if (!apiKey) {
+                return "Boss, please tap the '🔑 KEY' button at top right to enter your Gemini API key.";
+            }
+
+            statusText.innerText = "THINKING...";
+            const models = ['gemini-3.6-flash', 'gemini-3.1-pro-preview'];
+            let lastError = "";
+
+            for (let model of models) {
+                try {
+                    const url = ;
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{ text: "You are JARVIS, an intelligent AI assistant. Answer Boss directly and concisely. Question: " + promptText }]
+                            }]
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
+                        statusText.innerText = "SYSTEM ONLINE // READY";
+                        return data.candidates[0].content.parts[0].text;
+                    }
+
+                    if (data.error && data.error.message) {
+                        lastError = data.error.message;
+                    }
+                } catch (err) {
+                    lastError = "Network connection failed. Please check internet.";
+                }
+            }
+
+            statusText.innerText = "SYSTEM ONLINE // READY";
+            return "API Error: " + (lastError || "Service unavailable.");
+        }
+
+        async function processCommand(text) {
+            const query = text.toLowerCase();
+
+            if (query.includes('torch') || query.includes('flashlight') || query.includes('light')) {
+                if (query.includes('on') || query.includes('open') || query.includes('start')) {
+                    let ok = window.Android && window.Android.setTorch ? window.Android.setTorch(true) : false;
+                    addMessage('JARVIS', ok ? "Flashlight turned ON, Boss." : "Turning ON Flashlight, Boss.");
+                    return;
+                } else if (query.includes('off') || query.includes('close') || query.includes('stop')) {
+                    let ok = window.Android && window.Android.setTorch ? window.Android.setTorch(false) : false;
+                    addMessage('JARVIS', ok ? "Flashlight turned OFF, Boss." : "Turning OFF Flashlight, Boss.");
+                    return;
+                }
+            } else if (query.includes('battery')) {
+                let level = window.Android && window.Android.getBatteryLevel ? window.Android.getBatteryLevel() : -1;
+                addMessage('JARVIS', level >= 0 ?  : "Battery level checked.");
+                return;
+            } else if (query.startsWith('open ')) {
+                let app = query.replace('open', '').trim();
+                let launched = window.Android && window.Android.openApp ? window.Android.openApp(app) : false;
+                addMessage('JARVIS', launched ?  : );
+                return;
+            }
+
+            const aiResponse = await fetchGeminiResponse(text);
+            addMessage('JARVIS', aiResponse);
+        }
+
+        async function sendText() {
             const input = document.getElementById('userInput');
             const val = input.value.trim();
             if (val) {
                 addMessage('YOU', val, true);
                 input.value = '';
-                addMessage('JARVIS', "I am currently undergoing interface updates, Boss. My responses will be fully configured shortly.");
+                await processCommand(val);
             }
         }
 
@@ -252,14 +302,13 @@
                 const text = event.results[0][0].transcript;
                 statusText.innerText = "SYSTEM ONLINE // READY";
                 addMessage('YOU', text, true);
-                sendText();
+                processCommand(text);
             };
             
             recognition.onerror = function() { statusText.innerText = "SYSTEM ONLINE // READY"; };
             recognition.start();
         }
 
-        // Run auto check on launch
         checkAppUpdate();
     </script>
 </body>
