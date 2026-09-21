@@ -19,13 +19,30 @@
             padding: 20px;
         }
 
-        .header { text-align: center; margin-top: 10px; }
-        .title { font-size: 22px; font-weight: 700; letter-spacing: 4px; text-shadow: 0 0 10px #00f3ff; }
-        .status { font-size: 12px; color: #70a1ff; letter-spacing: 2px; margin-top: 4px; }
+        .header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 10px;
+        }
+        .header-title { text-align: center; flex: 1; }
+        .title { font-size: 20px; font-weight: 700; letter-spacing: 3px; text-shadow: 0 0 10px #00f3ff; }
+        .status { font-size: 11px; color: #70a1ff; letter-spacing: 1px; margin-top: 2px; }
+        .key-btn {
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid #00f3ff;
+            color: #00f3ff;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.3);
+        }
 
         .orb-container {
             position: relative;
-            width: 180px; height: 180px;
+            width: 170px; height: 170px;
             display: flex; justify-content: center; align-items: center;
             cursor: pointer;
         }
@@ -46,7 +63,7 @@
 
         .display-box {
             width: 100%; max-width: 400px; height: 180px;
-            background: rgba(10, 25, 47, 0.7);
+            background: rgba(10, 25, 47, 0.75);
             border: 1px solid rgba(0, 243, 255, 0.3);
             border-radius: 12px; padding: 15px; overflow-y: auto;
             backdrop-filter: blur(5px); box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.1);
@@ -71,8 +88,11 @@
 <body>
 
     <div class="header">
-        <div class="title">JARVIS AI</div>
-        <div class="status" id="statusText">SYSTEM ONLINE // READY</div>
+        <div class="header-title">
+            <div class="title">JARVIS AI</div>
+            <div class="status" id="statusText">SYSTEM ONLINE // READY</div>
+        </div>
+        <button class="key-btn" onclick="setApiKey()">🔑 API KEY</button>
     </div>
 
     <div class="orb-container" onclick="startVoice()">
@@ -82,11 +102,11 @@
     </div>
 
     <div class="display-box" id="chatDisplay">
-        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome back, Boss. All core hardware bridges active. How can I serve you?</div>
+        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome back, Boss. Neural Core with Gemini AI active. How can I assist you today?</div>
     </div>
 
     <div class="controls">
-        <input type="text" id="userInput" placeholder="Ask Jarvis..." onkeypress="handleKey(event)">
+        <input type="text" id="userInput" placeholder="Ask Jarvis anything..." onkeypress="handleKey(event)">
         <button onclick="sendText()">SEND</button>
     </div>
 
@@ -94,11 +114,21 @@
         const chatDisplay = document.getElementById('chatDisplay');
         const statusText = document.getElementById('statusText');
 
+        function setApiKey() {
+            const currentKey = localStorage.getItem('gemini_api_key') || '';
+            const key = prompt("Enter your Gemini API Key from Google AI Studio:", currentKey);
+            if (key !== null) {
+                localStorage.setItem('gemini_api_key', key.trim());
+                alert("API Key saved successfully!");
+            }
+        }
+
         function speak(text) {
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.pitch = 0.9;
+                const cleanText = text.replace(/[*#_]/g, '');
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.pitch = 0.95;
                 utterance.rate = 1.0;
                 window.speechSynthesis.speak(utterance);
             }
@@ -114,36 +144,66 @@
             if (!isUser) speak(text);
         }
 
-        function processCommand(text) {
-            const query = text.toLowerCase();
-            let response = "";
+        async function fetchGeminiResponse(promptText) {
+            const apiKey = localStorage.getItem('gemini_api_key');
+            if (!apiKey) {
+                return "Boss, please tap the '🔑 API KEY' button at the top right to set your Gemini API key.";
+            }
 
+            statusText.innerText = "THINKING...";
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: "You are JARVIS, an extremely intelligent, helpful, and concise AI assistant built for Boss. Respond in a brief, direct, and conversational manner without markdown clutter. User question: " + promptText }]
+                        }]
+                    })
+                });
+
+                const data = await response.json();
+                statusText.innerText = "SYSTEM ONLINE // READY";
+                
+                if (data.candidates && data.candidates[0].content.parts[0].text) {
+                    return data.candidates[0].content.parts[0].text;
+                } else {
+                    return "Sorry Boss, I encountered an issue parsing the AI response.";
+                }
+            } catch (err) {
+                statusText.innerText = "SYSTEM ONLINE // READY";
+                return "Unable to connect to Gemini AI core. Please check your network or API Key.";
+            }
+        }
+
+        async function processCommand(text) {
+            const query = text.toLowerCase();
+
+            // Hardware Commands (Local Execution)
             if (query.includes('torch') || query.includes('flashlight') || query.includes('light')) {
                 if (query.includes('on') || query.includes('open') || query.includes('start')) {
                     let ok = window.Android && window.Android.setTorch ? window.Android.setTorch(true) : false;
-                    response = ok ? "Flashlight turned ON, Boss." : "Turning ON Flashlight, Boss.";
+                    addMessage('JARVIS', ok ? "Flashlight turned ON, Boss." : "Turning ON Flashlight, Boss.");
+                    return;
                 } else if (query.includes('off') || query.includes('close') || query.includes('stop')) {
                     let ok = window.Android && window.Android.setTorch ? window.Android.setTorch(false) : false;
-                    response = ok ? "Flashlight turned OFF, Boss." : "Turning OFF Flashlight, Boss.";
-                } else {
-                    response = "Do you want me to turn the flashlight ON or OFF, Boss?";
+                    addMessage('JARVIS', ok ? "Flashlight turned OFF, Boss." : "Turning OFF Flashlight, Boss.");
+                    return;
                 }
             } else if (query.includes('battery')) {
                 let level = window.Android && window.Android.getBatteryLevel ? window.Android.getBatteryLevel() : -1;
-                response = level >= 0 ? `Your battery level is currently at ${level} percent, Boss.` : "Battery level checked.";
-            } else if (query.includes('open')) {
+                addMessage('JARVIS', level >= 0 ? `Your battery level is currently at ${level} percent, Boss.` : "Battery level checked.");
+                return;
+            } else if (query.startsWith('open ')) {
                 let app = query.replace('open', '').trim();
                 let launched = window.Android && window.Android.openApp ? window.Android.openApp(app) : false;
-                response = launched ? `Opening ${app}, Boss.` : `Attempting to launch ${app}, Boss.`;
-            } else if (query.includes('hello') || query.includes('hi')) {
-                response = "Hello Boss! Systems are fully integrated and listening.";
-            } else if (query.includes('who are you')) {
-                response = "I am JARVIS, your native Android AI assistant with direct hardware control.";
-            } else {
-                response = "Command acknowledged, Boss. Processing via neural core.";
+                addMessage('JARVIS', launched ? `Opening ${app}, Boss.` : `Attempting to launch ${app}, Boss.`);
+                return;
             }
 
-            setTimeout(() => addMessage('JARVIS', response), 400);
+            // Cloud Gemini AI Execution for General Intelligence
+            const aiResponse = await fetchGeminiResponse(text);
+            addMessage('JARVIS', aiResponse);
         }
 
         function sendText() {
@@ -160,7 +220,7 @@
 
         function startVoice() {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert('Voice Recognition not supported in WebView.');
+                alert('Voice Recognition not supported.');
                 return;
             }
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
