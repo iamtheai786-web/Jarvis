@@ -102,7 +102,7 @@
     </div>
 
     <div class="display-box" id="chatDisplay">
-        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome back, Boss. Neural Core with Gemini AI active. How can I assist you today?</div>
+        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome back, Boss. Gemini AI Engine active. How can I assist you?</div>
     </div>
 
     <div class="controls">
@@ -146,7 +146,7 @@
 
         async function fetchGeminiResponse(promptText) {
             const apiKey = localStorage.getItem('gemini_api_key');
-            if (!apiKey) {
+            if (!apiKey || apiKey === "") {
                 return "Boss, please tap the '🔑 API KEY' button at the top right to set your Gemini API key.";
             }
 
@@ -157,22 +157,26 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{
-                            parts: [{ text: "You are JARVIS, an extremely intelligent, helpful, and concise AI assistant built for Boss. Respond in a brief, direct, and conversational manner without markdown clutter. User question: " + promptText }]
+                            parts: [{ text: "You are JARVIS, an intelligent AI assistant. Respond directly and concisely to Boss. Question: " + promptText }]
                         }]
                     })
                 });
 
                 const data = await response.json();
                 statusText.innerText = "SYSTEM ONLINE // READY";
-                
-                if (data.candidates && data.candidates[0].content.parts[0].text) {
+
+                if (data.error) {
+                    return "API Key Error: " + data.error.message;
+                }
+
+                if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts) {
                     return data.candidates[0].content.parts[0].text;
                 } else {
-                    return "Sorry Boss, I encountered an issue parsing the AI response.";
+                    return "Unexpected response format from Google AI server.";
                 }
             } catch (err) {
                 statusText.innerText = "SYSTEM ONLINE // READY";
-                return "Unable to connect to Gemini AI core. Please check your network or API Key.";
+                return "Connection Error: Check your internet connection.";
             }
         }
 
@@ -201,7 +205,7 @@
                 return;
             }
 
-            // Cloud Gemini AI Execution for General Intelligence
+            // Gemini AI Execution
             const aiResponse = await fetchGeminiResponse(text);
             addMessage('JARVIS', aiResponse);
         }
