@@ -173,7 +173,7 @@
 
         function handleUpdateClick() {
             if (updateBtn.classList.contains("btn-update-green")) {
-                if (remoteDownloadUrl && remoteDownloadUrl !== "#") {
+                if (window.Android && window.Android.downloadAndInstallApk) { window.Android.downloadAndInstallApk(remoteDownloadUrl); } else { window.open(remoteDownloadUrl, "_blank"); }
                     window.open(remoteDownloadUrl, '_blank');
                 } else {
                     alert("Download link starting...");
