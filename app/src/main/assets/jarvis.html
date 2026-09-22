@@ -31,29 +31,15 @@
 
         .header-actions { display: flex; gap: 8px; }
         .btn {
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid #ffffff;
-            color: #ffffff;
+            background: rgba(0, 243, 255, 0.15);
+            border: 1px solid #00f3ff;
+            color: #00f3ff;
             padding: 6px 12px;
             border-radius: 12px;
             font-size: 11px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-update-active {
-            background: #00ff66 !important;
-            color: #050b14 !important;
-            border-color: #00ff66 !important;
-            box-shadow: 0 0 15px #00ff66 !important;
-            animation: pulse-green 1.5s infinite;
-        }
-
-        @keyframes pulse-green {
-            0% { transform: scale(1); box-shadow: 0 0 10px #00ff66; }
-            50% { transform: scale(1.05); box-shadow: 0 0 20px #00ff66; }
-            100% { transform: scale(1); box-shadow: 0 0 10px #00ff66; }
+            box-shadow: 0 0 8px rgba(0, 243, 255, 0.3);
         }
 
         .orb-wrapper {
@@ -64,7 +50,7 @@
         }
         .orb-container {
             position: relative;
-            width: 65px; height: 65px;
+            width: 60px; height: 60px;
             display: flex; justify-content: center; align-items: center;
             cursor: pointer;
         }
@@ -97,7 +83,7 @@
         .user-msg { color: #eccc68; text-align: right; }
 
         .controls { width: 100%; display: flex; gap: 8px; }
-        input {
+        input.text-input {
             flex: 1; background: rgba(10, 25, 47, 0.9);
             border: 1px solid rgba(0, 243, 255, 0.4); border-radius: 20px;
             padding: 12px 18px; color: #fff; outline: none; font-size: 14px;
@@ -107,6 +93,33 @@
             padding: 12px 20px; color: #050b14; font-weight: bold; cursor: pointer;
             box-shadow: 0 0 10px #00f3ff;
         }
+
+        /* IN-APP MODAL FOR API KEY */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 11, 20, 0.9);
+            display: none; justify-content: center; align-items: center;
+            z-index: 9999; backdrop-filter: blur(6px);
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-card {
+            background: #0a192f; border: 1px solid #00f3ff;
+            border-radius: 16px; padding: 20px; width: 88%; max-width: 340px;
+            box-shadow: 0 0 25px rgba(0, 243, 255, 0.4); text-align: center;
+        }
+        .modal-card h3 { color: #00f3ff; font-size: 16px; margin-bottom: 8px; }
+        .modal-card p { color: #70a1ff; font-size: 11px; margin-bottom: 15px; }
+        .modal-card input {
+            width: 100%; background: #050b14; border: 1px solid rgba(0, 243, 255, 0.5);
+            border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 12px;
+            margin-bottom: 15px; outline: none;
+        }
+        .modal-btns { display: flex; gap: 10px; justify-content: center; }
+        .modal-btns button {
+            padding: 8px 16px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; border: none;
+        }
+        .btn-save { background: #00f3ff; color: #050b14; }
+        .btn-cancel { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid #fff; }
     </style>
 </head>
 <body>
@@ -117,8 +130,7 @@
             <div class="status" id="statusText">SYSTEM ONLINE // READY</div>
         </div>
         <div class="header-actions">
-            <button class="btn" id="updateBtn" onclick="handleUpdateClick()">UPDATE</button>
-            <button class="btn" onclick="setApiKey()">🔑 KEY</button>
+            <button class="btn" onclick="openKeyModal()">🔑 KEY</button>
         </div>
     </div>
 
@@ -131,57 +143,50 @@
     </div>
 
     <div class="display-box" id="chatDisplay">
-        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome Boss! Tap '🔑 KEY' to enter your API key, then ask me anything.</div>
+        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome Boss! Tap '🔑 KEY' to enter your API key, then send me any message.</div>
     </div>
 
     <div class="controls">
-        <input type="text" id="userInput" placeholder="Ask Jarvis anything..." onkeypress="handleKey(event)">
-        <button class="send-btn" onclick="sendText()">SEND</button>
+        <input type="text" class="text-input" id="userInput" placeholder="Ask Jarvis anything..." onkeypress="handleKey(event)">
+        <button type="button" class="send-btn" onclick="sendText()">SEND</button>
+    </div>
+
+    <!-- API KEY IN-APP MODAL -->
+    <div class="modal-overlay" id="keyModal">
+        <div class="modal-card">
+            <h3>SET GEMINI API KEY</h3>
+            <p>Paste your API key from Google AI Studio below:</p>
+            <input type="text" id="apiKeyInput" placeholder="AIzaSy..." />
+            <div class="modal-btns">
+                <button type="button" class="btn-save" onclick="saveApiKeyModal()">SAVE KEY</button>
+                <button type="button" class="btn-cancel" onclick="closeKeyModal()">CANCEL</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        const CURRENT_VERSION = 2;
-        const RAW_VERSION_URL = "/main/version.json";
-        let updateDownloadUrl = "";
-
         const chatDisplay = document.getElementById('chatDisplay');
         const statusText = document.getElementById('statusText');
-        const updateBtn = document.getElementById('updateBtn');
+        const keyModal = document.getElementById('keyModal');
+        const apiKeyInput = document.getElementById('apiKeyInput');
 
-        async function checkAppUpdate() {
-            try {
-                const res = await fetch(RAW_VERSION_URL + '?t=' + new Date().getTime());
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.version > CURRENT_VERSION) {
-                        updateDownloadUrl = data.downloadUrl || "";
-                        updateBtn.innerText = "UPDATE AVAILABLE 🚀";
-                        updateBtn.classList.add("btn-update-active");
-                    }
-                }
-            } catch (err) {
-                console.log("Update check skipped.");
-            }
+        function openKeyModal() {
+            apiKeyInput.value = localStorage.getItem('gemini_api_key') || '';
+            keyModal.classList.add('active');
         }
 
-        function handleUpdateClick() {
-            if (updateBtn.classList.contains("btn-update-active")) {
-                if (window.Android && window.Android.openUrl) {
-                    window.Android.openUrl(updateDownloadUrl);
-                } else {
-                    window.open(updateDownloadUrl, '_blank');
-                }
+        function closeKeyModal() {
+            keyModal.classList.remove('active');
+        }
+
+        function saveApiKeyModal() {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                localStorage.setItem('gemini_api_key', key);
+                closeKeyModal();
+                addMessage('JARVIS', 'API Key saved successfully! How can I assist you today, Boss?');
             } else {
-                alert("Your Jarvis App is up to date (v" + CURRENT_VERSION + ").");
-            }
-        }
-
-        function setApiKey() {
-            const currentKey = localStorage.getItem('gemini_api_key') || '';
-            const key = prompt("Enter your Gemini API Key:", currentKey);
-            if (key !== null && key.trim() !== "") {
-                localStorage.setItem('gemini_api_key', key.trim());
-                alert("API Key permanently saved!");
+                alert('Please enter a valid API key.');
             }
         }
 
@@ -199,7 +204,7 @@
         function addMessage(sender, text, isUser = false) {
             const msg = document.createElement('div');
             msg.className = 'message ' + (isUser ? 'user-msg' : 'jarvis-msg');
-            msg.innerHTML = ;
+            msg.innerHTML = `<b>${sender}:</b> ${text}`;
             chatDisplay.appendChild(msg);
             chatDisplay.scrollTop = chatDisplay.scrollHeight;
 
@@ -209,7 +214,8 @@
         async function fetchGeminiResponse(promptText) {
             const apiKey = localStorage.getItem('gemini_api_key') || '';
             if (!apiKey) {
-                return "Boss, please tap the '🔑 KEY' button at top right to enter your Gemini API key.";
+                openKeyModal();
+                return "Boss, please enter your Gemini API key in the popup and tap SAVE KEY.";
             }
 
             statusText.innerText = "THINKING...";
@@ -218,7 +224,7 @@
 
             for (let model of models) {
                 try {
-                    const url = ;
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
                     const response = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -263,12 +269,12 @@
                 }
             } else if (query.includes('battery')) {
                 let level = window.Android && window.Android.getBatteryLevel ? window.Android.getBatteryLevel() : -1;
-                addMessage('JARVIS', level >= 0 ?  : "Battery level checked.");
+                addMessage('JARVIS', level >= 0 ? `Your battery level is currently at ${level} percent, Boss.` : "Battery level checked.");
                 return;
             } else if (query.startsWith('open ')) {
                 let app = query.replace('open', '').trim();
                 let launched = window.Android && window.Android.openApp ? window.Android.openApp(app) : false;
-                addMessage('JARVIS', launched ?  : );
+                addMessage('JARVIS', launched ? `Opening ${app}, Boss.` : `Attempting to launch ${app}, Boss.`);
                 return;
             }
 
@@ -308,8 +314,6 @@
             recognition.onerror = function() { statusText.innerText = "SYSTEM ONLINE // READY"; };
             recognition.start();
         }
-
-        checkAppUpdate();
     </script>
 </body>
 </html>
