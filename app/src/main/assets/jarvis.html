@@ -31,93 +31,66 @@
 
         .header-actions { display: flex; gap: 8px; }
         .btn {
-            background: rgba(0, 243, 255, 0.15);
-            border: 1px solid #00f3ff;
-            color: #00f3ff;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid #ffffff;
+            color: #ffffff;
             padding: 6px 12px;
             border-radius: 12px;
             font-size: 11px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 0 8px rgba(0, 243, 255, 0.3);
+            transition: all 0.3s ease;
         }
 
-        .orb-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 6px 0;
+        /* GREEN PULSING BUTTON WHEN UPDATE IS READY */
+        .btn-update-green {
+            background: #00ff66 !important;
+            color: #050b14 !important;
+            border-color: #00ff66 !important;
+            box-shadow: 0 0 15px #00ff66 !important;
+            animation: pulse-green 1.5s infinite;
         }
-        .orb-container {
-            position: relative;
-            width: 60px; height: 60px;
-            display: flex; justify-content: center; align-items: center;
-            cursor: pointer;
+
+        @keyframes pulse-green {
+            0% { transform: scale(1); box-shadow: 0 0 8px #00ff66; }
+            50% { transform: scale(1.05); box-shadow: 0 0 18px #00ff66; }
+            100% { transform: scale(1); box-shadow: 0 0 8px #00ff66; }
         }
+
+        .orb-wrapper { display: flex; justify-content: center; align-items: center; padding: 6px 0; }
+        .orb-container { position: relative; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         .ring { position: absolute; border-radius: 50%; border: 2px solid transparent; }
         .ring-1 { width: 100%; height: 100%; border-top: 2px solid #00f3ff; border-bottom: 2px solid #00f3ff; animation: spin 4s linear infinite; }
         .ring-2 { width: 80%; height: 80%; border-left: 2px solid #70a1ff; border-right: 2px solid #70a1ff; animation: spin-reverse 2.5s linear infinite; }
-        .core {
-            width: 50%; height: 50%;
-            background: radial-gradient(circle, #00f3ff 0%, #050b14 70%);
-            border-radius: 50%;
-            box-shadow: 0 0 20px #00f3ff;
-            animation: pulse 2s ease-in-out infinite;
-        }
+        .core { width: 50%; height: 50%; background: radial-gradient(circle, #00f3ff 0%, #050b14 70%); border-radius: 50%; box-shadow: 0 0 20px #00f3ff; animation: pulse 2s ease-in-out infinite; }
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
         @keyframes spin-reverse { 100% { transform: rotate(-360deg); } }
         @keyframes pulse { 0%, 100% { transform: scale(0.9); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } }
 
         .display-box {
-            flex: 1;
-            width: 100%;
-            background: rgba(10, 25, 47, 0.85);
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            border-radius: 12px; padding: 15px; overflow-y: auto;
-            backdrop-filter: blur(5px); box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.1);
-            margin: 8px 0;
+            flex: 1; width: 100%; background: rgba(10, 25, 47, 0.85);
+            border: 1px solid rgba(0, 243, 255, 0.3); border-radius: 12px;
+            padding: 15px; overflow-y: auto; backdrop-filter: blur(5px);
+            box-shadow: inset 0 0 10px rgba(0, 243, 255, 0.1); margin: 8px 0;
         }
         .message { margin-bottom: 12px; font-size: 14px; line-height: 1.5; word-wrap: break-word; }
         .jarvis-msg { color: #00f3ff; }
         .user-msg { color: #eccc68; text-align: right; }
 
         .controls { width: 100%; display: flex; gap: 8px; }
-        input.text-input {
-            flex: 1; background: rgba(10, 25, 47, 0.9);
-            border: 1px solid rgba(0, 243, 255, 0.4); border-radius: 20px;
-            padding: 12px 18px; color: #fff; outline: none; font-size: 14px;
-        }
-        button.send-btn {
-            background: #00f3ff; border: none; border-radius: 20px;
-            padding: 12px 20px; color: #050b14; font-weight: bold; cursor: pointer;
-            box-shadow: 0 0 10px #00f3ff;
-        }
+        input.text-input { flex: 1; background: rgba(10, 25, 47, 0.9); border: 1px solid rgba(0, 243, 255, 0.4); border-radius: 20px; padding: 12px 18px; color: #fff; outline: none; font-size: 14px; }
+        button.send-btn { background: #00f3ff; border: none; border-radius: 20px; padding: 12px 20px; color: #050b14; font-weight: bold; cursor: pointer; box-shadow: 0 0 10px #00f3ff; }
 
         /* IN-APP MODAL FOR API KEY */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 11, 20, 0.9);
-            display: none; justify-content: center; align-items: center;
-            z-index: 9999; backdrop-filter: blur(6px);
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 11, 20, 0.9); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(6px); }
         .modal-overlay.active { display: flex; }
-        .modal-card {
-            background: #0a192f; border: 1px solid #00f3ff;
-            border-radius: 16px; padding: 20px; width: 88%; max-width: 340px;
-            box-shadow: 0 0 25px rgba(0, 243, 255, 0.4); text-align: center;
-        }
+        .modal-card { background: #0a192f; border: 1px solid #00f3ff; border-radius: 16px; padding: 20px; width: 88%; max-width: 340px; box-shadow: 0 0 25px rgba(0, 243, 255, 0.4); text-align: center; }
         .modal-card h3 { color: #00f3ff; font-size: 16px; margin-bottom: 8px; }
         .modal-card p { color: #70a1ff; font-size: 11px; margin-bottom: 15px; }
-        .modal-card input {
-            width: 100%; background: #050b14; border: 1px solid rgba(0, 243, 255, 0.5);
-            border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 12px;
-            margin-bottom: 15px; outline: none;
-        }
+        .modal-card input { width: 100%; background: #050b14; border: 1px solid rgba(0, 243, 255, 0.5); border-radius: 10px; padding: 10px 12px; color: #fff; font-size: 12px; margin-bottom: 15px; outline: none; }
         .modal-btns { display: flex; gap: 10px; justify-content: center; }
-        .modal-btns button {
-            padding: 8px 16px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; border: none;
-        }
+        .modal-btns button { padding: 8px 16px; border-radius: 10px; font-weight: bold; font-size: 12px; cursor: pointer; border: none; }
         .btn-save { background: #00f3ff; color: #050b14; }
         .btn-cancel { background: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid #fff; }
     </style>
@@ -130,6 +103,7 @@
             <div class="status" id="statusText">SYSTEM ONLINE // READY</div>
         </div>
         <div class="header-actions">
+            <button class="btn" id="updateBtn" onclick="handleUpdateClick()">UPDATE</button>
             <button class="btn" onclick="openKeyModal()">🔑 KEY</button>
         </div>
     </div>
@@ -143,7 +117,7 @@
     </div>
 
     <div class="display-box" id="chatDisplay">
-        <div class="message jarvis-msg"><b>JARVIS:</b> Welcome Boss! Tap '🔑 KEY' to enter your API key, then send me any message.</div>
+        <div class="message jarvis-msg"><b>JARVIS:</b> Auto-Update system configured. Checking for updates...</div>
     </div>
 
     <div class="controls">
@@ -165,10 +139,49 @@
     </div>
 
     <script>
+        const CURRENT_APP_VERSION = 1;
+        let remoteDownloadUrl = "";
+
         const chatDisplay = document.getElementById('chatDisplay');
         const statusText = document.getElementById('statusText');
+        const updateBtn = document.getElementById('updateBtn');
         const keyModal = document.getElementById('keyModal');
         const apiKeyInput = document.getElementById('apiKeyInput');
+
+        // Check for updates from GitHub or Local Server
+        async function checkAppUpdate() {
+            try {
+                // Determine remote URL dynamically
+                const updateUrl = 'https://raw.githubusercontent.com/iamtheai786-web/Jarvis/main/version.json?t=' + new Date().getTime();
+                const response = await fetch('version.json?t=' + new Date().getTime());
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.version > CURRENT_APP_VERSION) {
+                        remoteDownloadUrl = data.downloadUrl || "#";
+                        updateBtn.innerText = "UPDATE READY 🚀";
+                        updateBtn.classList.add("btn-update-green");
+                        addMessage('JARVIS', `🚀 New Update v${data.version} available! Tap the Green UPDATE button above.`);
+                    } else {
+                        updateBtn.innerText = "UPDATE";
+                        updateBtn.classList.remove("btn-update-green");
+                    }
+                }
+            } catch (err) {
+                console.log("Update check skipped / local test mode.");
+            }
+        }
+
+        function handleUpdateClick() {
+            if (updateBtn.classList.contains("btn-update-green")) {
+                if (remoteDownloadUrl && remoteDownloadUrl !== "#") {
+                    window.open(remoteDownloadUrl, '_blank');
+                } else {
+                    alert("Download link starting...");
+                }
+            } else {
+                alert("Your Jarvis App is already up to date (v" + CURRENT_APP_VERSION + ").");
+            }
+        }
 
         function openKeyModal() {
             apiKeyInput.value = localStorage.getItem('gemini_api_key') || '';
@@ -314,6 +327,9 @@
             recognition.onerror = function() { statusText.innerText = "SYSTEM ONLINE // READY"; };
             recognition.start();
         }
+
+        // Run check on page load
+        checkAppUpdate();
     </script>
 </body>
 </html>
